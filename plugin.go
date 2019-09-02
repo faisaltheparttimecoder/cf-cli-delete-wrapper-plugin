@@ -5,6 +5,7 @@ import (
 	"code.cloudfoundry.org/cli/plugin"
 	"fmt"
 	"gopkg.in/yaml.v2"
+	"strings"
 )
 
 type cfDeleteWrapper struct{}
@@ -50,7 +51,7 @@ func (c *cfDeleteWrapper) GetMetadata() plugin.PluginMetadata {
 		Version: plugin.VersionType{
 			Major: 0,
 			Minor: 1,
-			Build: 0,
+			Build: 1,
 		},
 		MinCliVersion: plugin.VersionType{
 			Major: 6,
@@ -117,9 +118,7 @@ func (c *cfDeleteWrapper) MultiAppDelete(cli plugin.CliConnection) {
 	}
 
 	// Get the app and delete the app
-	for _, app := range apps {
-		checkDeleteApp(cli, app, false)
-	}
+	checkDeleteApp(cli, apps, false)
 
 }
 
@@ -139,38 +138,54 @@ func (c *cfDeleteWrapper) DeleteAppUsingManifest(cli plugin.CliConnection) {
 	}
 
 	// Check & Delete the app name
-	if len(m.Applications) > 0 &&  m.Applications[0].Name != "" {
-		appName := m.Applications[0].Name
-		if !cmdOptions.Force {
-			yesOrNoConfirmation(appName)
+	if len(m.Applications) > 0 && m.Applications[0].Name != "" {
+
+		// Extract app name
+		var apps []string
+		for _, a := range m.Applications {
+			apps = append(apps, a.Name)
 		}
-		checkDeleteApp(cli, appName, true)
+
+		// Check with user if they want to continue
+		if !cmdOptions.Force {
+			yesOrNoConfirmation(strings.Join(apps, ","))
+		}
+
+		// Get the app and delete the app
+		checkDeleteApp(cli, apps, false)
+
 	} else {
 		handleError("Unable to find any information from manifest", true)
 	}
 }
 
 // Check & Delete the app
-func checkDeleteApp(cli plugin.CliConnection, app string, exit bool) {
-	appInfo, _ := cli.GetApp(app)
+func checkDeleteApp(cli plugin.CliConnection, apps []string, exit bool) {
 
-	// App not found
-	if appInfo.Guid == "" {
-		handleError(fmt.Sprintf("ERROR: App \"%s\" not found on the current org & space, continuing with remaining apps...", app), exit)
-	} else {
-		// Run the curl command to delete the app
-		output, err  := cli.CliCommandWithoutTerminalOutput("curl", "-X", "DELETE", fmt.Sprintf("/v2/apps/%s", appInfo.Guid))
-		if err != nil {
-			handleError(fmt.Sprintf("ERROR: Received error when deleting the app \"%s\", err: %v", appInfo.Name, err), exit)
-			fmt.Println("continuing with other apps, if there is any...")
-		}
+	// loop through the app list and delete the app
+	for _, app := range apps {
 
-		// If we found any message, that means the CLI wants to tell us something is wrong
-		if len(output) > 1 {
-			handleError(fmt.Sprintf("ERROR: Something went wrong when deleting the app \"%s\", message: \n%v", appInfo.Name, output), exit)
-			fmt.Println("continuing with other apps, if there is any...")
+		// Get the app info
+		appInfo, _ := cli.GetApp(app)
+
+		// App not found
+		if appInfo.Guid == "" {
+			handleError(fmt.Sprintf("ERROR: App \"%s\" not found on the current org & space, continuing with remaining apps...", app), exit)
 		} else {
-			fmt.Println("\nSuccessfully deleted the app \"" + appInfo.Name + "\"")
+			// Run the curl command to delete the app
+			output, err  := cli.CliCommandWithoutTerminalOutput("curl", "-X", "DELETE", fmt.Sprintf("/v2/apps/%s", appInfo.Guid))
+			if err != nil {
+				handleError(fmt.Sprintf("ERROR: Received error when deleting the app \"%s\", err: %v", appInfo.Name, err), exit)
+				fmt.Println("continuing with other apps, if there is any...")
+			}
+
+			// If we found any message, that means the CLI wants to tell us something is wrong
+			if len(output) > 1 {
+				handleError(fmt.Sprintf("ERROR: Something went wrong when deleting the app \"%s\", message: \n%v", appInfo.Name, output), exit)
+				fmt.Println("continuing with other apps, if there is any...")
+			} else {
+				fmt.Println("\nSuccessfully deleted the app \"" + appInfo.Name + "\"")
+			}
 		}
 	}
 }

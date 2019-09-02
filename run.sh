@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-PLUGIN_VERSION=v0.1.0
+PLUGIN_VERSION=v0.1.1
 PLUGIN_NAME=cf-delete-wrapper
 
 # Create the build
