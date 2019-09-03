@@ -19,7 +19,7 @@ You can use either of the below method to install the plugin.
 
 If you are using MacOS, you could run  
 
-    cf install-plugin -f https://github.com/faisaltheparttimecoder/cf-cli-delete-wrapper-plugin/releases/cf-delete-wrapper_0.1.0.osx
+    cf install-plugin -f https://github.com/faisaltheparttimecoder/cf-cli-delete-wrapper-plugin/releases/download/0.1.1/cf-delete-wrapper_v0.1.1.osx
     
 # Usage
 
@@ -33,7 +33,7 @@ If you are using MacOS, you could run
          dma
       
       USAGE:
-         cf delete-multi-apps <APP1>,<APP2>,....,<APPn>
+         cf delete-multi-apps -a <APP1>,<APP2>,....,<APPn>
       
       OPTIONS:
          -force       -f, no need to prompt for confirmation

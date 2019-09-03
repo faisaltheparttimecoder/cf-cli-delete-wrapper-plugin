@@ -64,7 +64,7 @@ func (c *cfDeleteWrapper) GetMetadata() plugin.PluginMetadata {
 				Alias:    "dma",
 				HelpText: "Delete multiple apps via a single command",
 				UsageDetails: plugin.Usage{
-					Usage: fmt.Sprintf("cf %s <APP1>,<APP2>,....,<APPn>", multiAppDeleteCmd),
+					Usage: fmt.Sprintf("cf %s -a <APP1>,<APP2>,....,<APPn>", multiAppDeleteCmd),
 					Options: map[string]string{
 						"app": "-a, list of apps to be deleted",
 						"force": "-f, no need to prompt for confirmation",
